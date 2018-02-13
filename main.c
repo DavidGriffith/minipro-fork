@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <libgen.h>
 #include <signal.h>
+#include <errno.h>
 #include "main.h"
 #include "minipro.h"
 #include "database.h"
@@ -12,6 +13,8 @@
 #include "fuses.h"
 #include "easyconfig.h"
 #include "error.h"
+
+#define PAGER_PROGRAM	"less"
 
 struct {
 	void (*action) (const char *, minipro_handle_t *handle, device_t *device);
@@ -53,19 +56,49 @@ void print_help_and_exit(char *progname) {
 }
 
 void print_devices_and_exit() {
+	FILE *outfile = stdout;
+	static char fname[PATH_MAX];
+	static char pager_call[PATH_MAX];
+	device_t *device;
+
 	if(isatty(STDOUT_FILENO)) {
-		// stdout is a terminal, opening pager
+		// stdout is a terminal, write to temp file
+		int fd;
+		size_t len;
+		char *pager_program;
+		static char template[] = "/tmp/miniproXXXXXX";
+
 		signal(SIGINT, SIG_IGN);
-		char *pager_program = getenv("PAGER");
-		if(!pager_program) pager_program = "less";
-		FILE *pager = popen(pager_program, "w");
-		dup2(fileno(pager), STDOUT_FILENO);
+		strncpy(fname, template, strlen(template));
+		fd = mkstemp(fname);
+		if (fd == -1) {
+			printf("Can't open %s: %s\n", fname, strerror(errno));
+			exit(2);
+		}
+
+		outfile = fdopen(fd, "w");
+
+		pager_program = getenv("PAGER");
+		if (pager_program != NULL) {
+			strncpy(pager_call, pager_program, PATH_MAX - strlen(pager_program));
+		} else {
+			strncpy(pager_call, PAGER_PROGRAM, PATH_MAX - strlen(PAGER_PROGRAM));
+		}
+
+		len = strlen(pager_call);
+		strncat(pager_call, " ", 1);
+		strncat(pager_call, fname, PATH_MAX - (len + 1));
 	}
 
-	device_t *device;
 	for(device = &(devices[0]); device[0].name; device = &(device[1])) {
-		printf("%s\n", device->name);
+		fprintf(outfile, "%s\n", device->name);
 	}
+
+	if(isatty(STDOUT_FILENO)) {
+		system(pager_call);
+		remove(fname);
+	}
+
 	exit(-1);
 }
 
