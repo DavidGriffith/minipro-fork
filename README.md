@@ -21,13 +21,13 @@ $ minipro -p ATMEGA48 -r atmega48.bin
 
 ## Prerequisites
 
-You'll need some sort of Linux or MacOS machine.  Other Unices may work, 
+You'll need some sort of Linux or MacOS machine.  Other Unices may work,
 though that is untested.  You will need version 1.0.16 or greater of libusb.
 
 
 ## Installation on Linux
 
-### Install build dependencies 
+### Install build dependencies
 
 #### Debian/Ubuntu
 ```nohighlight
@@ -39,7 +39,12 @@ sudo apt-get install build-essential pkg-config git libusb-1.0-0-dev
 sudo yum install gcc make pkgconfig git libusbx-devel
 ```
 
-### Checkout source code and compile 
+#### openSUSE
+```nohighlight
+sudo zypper install gcc make git-core srecord rpmdevtools libusb-1_0-devel libb64-devel
+```
+
+### Checkout source code and compile
 ```nohighlight
 git clone https://github.com/vdudouyt/minipro.git
 cd minipro
@@ -70,7 +75,7 @@ login.
 sudo cp udev/centos7/80-minipro.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 ```
-The CentOS rules file currently make the programmer device writable for 
+The CentOS rules file currently make the programmer device writable for
 all users.
 
 ### Bash completion (optional)
@@ -91,8 +96,8 @@ sudo apt-get install fakeroot debhelper dpkg-dev
 fakeroot dpkg-buildpackage -b -us -uc
 ```
 
-You should then have a .deb package for you to install with `dpkg -i`. 
-Note that the .deb package will already provide the udev and 
+You should then have a .deb package for you to install with `dpkg -i`.
+Note that the .deb package will already provide the udev and
 bash-completion configurations for you.
 
 ### Making a .rpm package
